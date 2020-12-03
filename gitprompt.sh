@@ -12,7 +12,9 @@ function async_run() {
 function async_run_zsh() {
   {
     eval "$@" &> /dev/null
-  }&!
+
+  # `true` is used here to allow bash to parse the script, as the zsh `&!` syntax will otherwise stop parsing prior to any execution.
+  }&! true
 }
 
 
@@ -448,7 +450,7 @@ function checkUpstream() {
   then
     if [[ -n $(git remote show) ]]; then
       (
-        if [ -n $ZSH_VERSION ]; then
+        if [ -n "$ZSH_VERSION" ]; then
           async_run_zsh "GIT_TERMINAL_PROMPT=0 git fetch --quiet"
         else
           async_run "GIT_TERMINAL_PROMPT=0 git fetch --quiet"
@@ -498,7 +500,7 @@ function updatePrompt() {
   local PROMPT_END
   local EMPTY_PROMPT
   local Blue="\[\033[0;34m\]"
-  if [ -n $ZSH_VERSION ]; then
+  if [ -n "$ZSH_VERSION" ]; then
     Blue='%{fg[blue]%}'
   fi
 
@@ -560,10 +562,24 @@ function updatePrompt() {
 
     case "${GIT_BRANCH-}" in
       ${GIT_PROMPT_MASTER_BRANCHES})
-        local STATUS_PREFIX="${PROMPT_LEADING_SPACE}${GIT_PROMPT_PREFIX_FINAL}${GIT_PROMPT_MASTER_BRANCH}${URL_SHORT-}\${GIT_BRANCH}${ResetColor}${GIT_FORMATTED_UPSTREAM-}"
+        # bash needs [a security fix applied](https://github.com/magicmonty/bash-git-prompt/pull/313) to guard against a code-execution vulnerability via evaluated branch names.
+        # zsh (without the PROMPT_SUBST option) doesn't seem to be vulnerable to the same issue, and the fix prevents the actual branch name from being displayed.
+        # So, just revert the fix when under zsh with PROMPT_SUBST disabled.
+        if [ -n "$ZSH_VERSION" ] && [[ ! -o PROMPT_SUBST ]]; then
+          local STATUS_PREFIX="${PROMPT_LEADING_SPACE}${GIT_PROMPT_PREFIX_FINAL}${GIT_PROMPT_MASTER_BRANCH}${URL_SHORT-}${GIT_BRANCH}${ResetColor}${GIT_FORMATTED_UPSTREAM-}"
+        else
+          local STATUS_PREFIX="${PROMPT_LEADING_SPACE}${GIT_PROMPT_PREFIX_FINAL}${GIT_PROMPT_MASTER_BRANCH}${URL_SHORT-}\${GIT_BRANCH}${ResetColor}${GIT_FORMATTED_UPSTREAM-}"
+        fi
         ;;
       *)
-        local STATUS_PREFIX="${PROMPT_LEADING_SPACE}${GIT_PROMPT_PREFIX_FINAL}${GIT_PROMPT_BRANCH}${URL_SHORT-}\${GIT_BRANCH}${ResetColor}${GIT_FORMATTED_UPSTREAM-}"
+        # bash needs [a security fix applied](https://github.com/magicmonty/bash-git-prompt/pull/313) to guard against a code-execution vulnerability via evaluated branch names.
+        # zsh (without the PROMPT_SUBST option) doesn't seem to be vulnerable to the same issue, and the fix prevents the actual branch name from being displayed.
+        # So, just revert the fix when under zsh with PROMPT_SUBST disabled.
+        if [ -n "$ZSH_VERSION" ] && [[ ! -o PROMPT_SUBST ]]; then
+          local STATUS_PREFIX="${PROMPT_LEADING_SPACE}${GIT_PROMPT_PREFIX_FINAL}${GIT_PROMPT_BRANCH}${URL_SHORT-}${GIT_BRANCH}${ResetColor}${GIT_FORMATTED_UPSTREAM-}"
+        else
+          local STATUS_PREFIX="${PROMPT_LEADING_SPACE}${GIT_PROMPT_PREFIX_FINAL}${GIT_PROMPT_BRANCH}${URL_SHORT-}\${GIT_BRANCH}${ResetColor}${GIT_FORMATTED_UPSTREAM-}"
+        fi
         ;;
     esac
     local STATUS=""
