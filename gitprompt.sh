@@ -563,9 +563,9 @@ function updatePrompt() {
     case "${GIT_BRANCH-}" in
       ${GIT_PROMPT_MASTER_BRANCHES})
         # bash needs [a security fix applied](https://github.com/magicmonty/bash-git-prompt/pull/313) to guard against a code-execution vulnerability via evaluated branch names.
-        # zsh doesn't seem to be vulnerable to the same issue, and the fix prevents the actual branch name from being displayed.
-        # So, just revert the fix when under zsh.
-        if [ -n "$ZSH_VERSION" ]; then
+        # zsh (without the PROMPT_SUBST option) doesn't seem to be vulnerable to the same issue, and the fix prevents the actual branch name from being displayed.
+        # So, just revert the fix when under zsh with PROMPT_SUBST disabled.
+        if [ -n "$ZSH_VERSION" ] && [[ ! -o PROMPT_SUBST ]]; then
           local STATUS_PREFIX="${PROMPT_LEADING_SPACE}${GIT_PROMPT_PREFIX_FINAL}${GIT_PROMPT_MASTER_BRANCH}${URL_SHORT-}${GIT_BRANCH}${ResetColor}${GIT_FORMATTED_UPSTREAM-}"
         else
           local STATUS_PREFIX="${PROMPT_LEADING_SPACE}${GIT_PROMPT_PREFIX_FINAL}${GIT_PROMPT_MASTER_BRANCH}${URL_SHORT-}\${GIT_BRANCH}${ResetColor}${GIT_FORMATTED_UPSTREAM-}"
@@ -573,9 +573,9 @@ function updatePrompt() {
         ;;
       *)
         # bash needs [a security fix applied](https://github.com/magicmonty/bash-git-prompt/pull/313) to guard against a code-execution vulnerability via evaluated branch names.
-        # zsh doesn't seem to be vulnerable to the same issue, and the fix prevents the actual branch name from being displayed.
-        # So, just revert the fix when under zsh.
-        if [ -n "$ZSH_VERSION" ]; then
+        # zsh (without the PROMPT_SUBST option) doesn't seem to be vulnerable to the same issue, and the fix prevents the actual branch name from being displayed.
+        # So, just revert the fix when under zsh with PROMPT_SUBST disabled.
+        if [ -n "$ZSH_VERSION" ] && [[ ! -o PROMPT_SUBST ]]; then
           local STATUS_PREFIX="${PROMPT_LEADING_SPACE}${GIT_PROMPT_PREFIX_FINAL}${GIT_PROMPT_BRANCH}${URL_SHORT-}${GIT_BRANCH}${ResetColor}${GIT_FORMATTED_UPSTREAM-}"
         else
           local STATUS_PREFIX="${PROMPT_LEADING_SPACE}${GIT_PROMPT_PREFIX_FINAL}${GIT_PROMPT_BRANCH}${URL_SHORT-}\${GIT_BRANCH}${ResetColor}${GIT_FORMATTED_UPSTREAM-}"
